@@ -20,7 +20,6 @@
     * These are the custom prices that will be used to for the sell method `CUSTOM`. Example:
         * ```json
             "CUSTOM_VALUES": {
-                "ITEM ID": PRICE,
                 "13345169760": 40
             }
             ```
