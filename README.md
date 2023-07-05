@@ -8,7 +8,7 @@
 - [Java](https://discord.gg/javaw)
 
 ## Installation
-Grab the latest version from (here)[https://github.com/workframes/mewtxjava-autosell/releases].
+Grab the latest version from [here](https://github.com/workframes/mewtxjava-autosell/releases).
 
 ## Settings Documentaion
 - `COOKIE`
