@@ -55,4 +55,4 @@ Grab the latest version from [here](https://github.com/workframes/mewtxjava-auto
 ```
 
 ## Still having toruble?
-* Join one of the discord servers mentioned in `Credits` and they will be happy to help you!
+* Join one of the discord servers mentioned in [Credits](https://github.com/workframes/mewtxjava-autosell#credits) and they will be happy to help you!
