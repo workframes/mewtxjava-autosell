@@ -23,7 +23,7 @@
                 "13345169760": 40
             }
             ```
-- `BLACK_LIST` 
+- `BLACKLIST` 
     * If a item is in this list, it will not put it up for resale.
 - `WEBHOOK`
     * If you have this enabled it will send notfications when a item sells.
