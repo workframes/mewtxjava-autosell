@@ -1,0 +1,13 @@
+{
+    "SELL_METHOD": "",
+    "CUSTOM_VALUES": {
+
+    },
+    "BLACKLIST": [
+        
+    ],
+    "WEBHOOK": {
+        "ENABLED": false,
+        "URL": ""
+    }
+}
