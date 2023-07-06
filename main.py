@@ -217,7 +217,7 @@ d88' d88'  88b`?888P' `?888P'888P'    `?8b      d8P' `?8b       `88b`?88P'`88b`?
                 conn_data = conn.json()
                 data = conn_data["data"]
                 if self.last_transaction_id is None:
-                    self.last_transaction_id = data[1]["idHash"]
+                    self.last_transaction_id = data[0]["idHash"]
                     return 
                 
                 for sale in data:
