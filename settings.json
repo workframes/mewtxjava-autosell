@@ -1,12 +1,10 @@
 {
     "COOKIE": "",
     "SELL_METHOD": "",
-    "CUSTOM_VALUES": {
-
-    },
-    "BLACKLIST": [
-        
-    ],
+    "MEWTVALUE_MULTIPLIER": 1,
+    "CUSTOM_VALUES": {},
+    "WHITELIST":[],
+    "BLACKLIST": [],
     "WEBHOOK": {
         "ENABLED": false,
         "URL": ""
