@@ -1,5 +1,5 @@
 try:
-    import requests, os, sys, json, time, threading
+    import requests, os, sys, json, time, threading, copy
     from colorama import Fore, Style
     from rgbprint import gradient_print
 except ModuleNotFoundError as error:
@@ -60,7 +60,7 @@ class Webhook:
 
 class Client:
     def __init__(self):
-        self.version = "1.0.0"
+        self.version = "1.0.1"
         self.title = (f"""
                                                                 d8,                              
                                        d8P                     `8P                               
@@ -93,6 +93,7 @@ d88' d88'  88b`?888P' `?888P'888P'    `?8b      d8P' `?8b       `88b`?88P'`88b`?
         self.inventory = {}
         self.last_transaction_id = None
         self.raw_inventory = []
+        self.onsale = []
         self.mewt_collection = []
         self.mewt_collection_reversed = []
         
@@ -140,7 +141,7 @@ d88' d88'  88b`?888P' `?888P'888P'    `?8b      d8P' `?8b       `88b`?88P'`88b`?
         self.infinite_thread(self.set_token, 200)
         self.infinite_thread(self.fetch_mewt_collection, 10 * 60)
 
-        self.logs.append(f"Logged in as {self.client['name']}(${self.client['id']})")
+        self.logs.append(f"Logged in as {self.client['name']}({self.client['id']})")
         self.logs.append("Fetching inventory this may take a minute, please wait.")
         self.infinite_thread(self.update_inventory, 15 * 60)
         self.infinite_thread(self.sell_all_items, 5)
@@ -353,44 +354,52 @@ d88' d88'  88b`?888P' `?888P'888P'    `?8b      d8P' `?8b       `88b`?88P'`88b`?
         
     def sell_all_items(self):
         if(len(self.inventory) > 0):
-            price_cache = {}
+            try:
+                inventory = copy.deepcopy(self.inventory)
+                price_cache = {}
+        
+                for collectibleItemId, collectibleInstanceIds in inventory.items():
+                    for collectibleInstanceId in collectibleInstanceIds:
+                        if collectibleInstanceId in self.onsale:
+                            if collectibleInstanceId in self.inventory[collectibleItemId]:
+                                self.inventory[collectibleItemId].remove(collectibleInstanceId)
+                            continue
 
-            for collectibleItemId, collectibleInstanceIds in self.inventory.items():
-                for collectibleInstanceId in collectibleInstanceIds:
-                    price = None
+                        price = None
 
-                    if self.sell_method == "CUSTOM":
-                        id = str(self.collectable_id_to_id[collectibleItemId])
-                        if not id in self.custom_values:
-                            self.logs.append(f"Failed to sell {self.collectable_id_to_name[collectibleItemId]} due to no custom value for the item.")
-                            self.inventory[collectibleItemId].remove(collectibleInstanceId)
-                            self.resellable_count -= 1
-                        else:
-                            price = self.custom_values[id]
-                    elif self.sell_method == "MEWTVALUES":
-                        mewt_data = self.find_mewtdata_by_collectable_item_id(collectibleItemId)
-                        if mewt_data["estimatedValue"] <= 0:
-                            self.logs.append(f"Failed to sell {self.collectable_id_to_name[collectibleItemId]} due mewt value being too low")
-                            self.inventory[collectibleItemId].remove(collectibleInstanceId)
-                            self.resellable_count -= 1
-                        else:
-                            price = mewt_data["estimatedValue"] * self.mewtvalue_multiplier
-                    elif self.sell_method == "UNDERCUT":
-                        if collectibleItemId not in price_cache:
-                            recent_seller = self.fetch_reseller(collectibleItemId)
-                            if recent_seller["seller"]["sellerId"] == self.client["id"]:
-                                price_cache[collectibleItemId] = recent_seller["price"]
+                        if self.sell_method == "CUSTOM":
+                            id = str(self.collectable_id_to_id[collectibleItemId])
+                            if not id in self.custom_values:
+                                self.logs.append(f"Failed to sell {self.collectable_id_to_name[collectibleItemId]} due to no custom value for the item.")
+                                self.resellable_count -= 1
                             else:
-                                price_cache[collectibleItemId] = (recent_seller["price"] - 1)
+                                price = self.custom_values[id]
+                        elif self.sell_method == "MEWTVALUES":
+                            mewt_data = self.find_mewtdata_by_collectable_item_id(collectibleItemId)
+                            if mewt_data["estimatedValue"] <= 0:
+                                self.logs.append(f"Failed to sell {self.collectable_id_to_name[collectibleItemId]} due mewt value being too low")
+                                self.resellable_count -= 1
+                            else:
+                                price = mewt_data["estimatedValue"] * self.mewtvalue_multiplier
+                        elif self.sell_method == "UNDERCUT":
+                            if collectibleItemId not in price_cache:
+                                recent_seller = self.fetch_reseller(collectibleItemId)
+                                if recent_seller["seller"]["sellerId"] == self.client["id"]:
+                                    price_cache[collectibleItemId] = recent_seller["price"]
+                                else:
+                                    price_cache[collectibleItemId] = (recent_seller["price"] - 1)
 
-                            price = price_cache[collectibleItemId]
-                        
-                    if price is not None:
-                        success = self.sell_item(price, collectibleItemId, collectibleInstanceId, self.collectable_instance_id_to_product_id[collectibleInstanceId])
-                        if success == True:
-                            self.logs.append(f"Successfully put {self.collectable_id_to_name[collectibleItemId]} on sale for {price}")
-                            self.inventory[collectibleItemId].remove(collectibleInstanceId)
-                            self.resellable_count -= 1
+                                price = price_cache[collectibleItemId]
+                            
+                        if price is not None:
+                            success = self.sell_item(price, collectibleItemId, collectibleInstanceId, self.collectable_instance_id_to_product_id[collectibleInstanceId])
+                            if success == True:
+                                self.logs.append(f"Successfully put {self.collectable_id_to_name[collectibleItemId]} on sale for {price}")
+                                self.onsale.append(collectibleInstanceId)
+                                self.resellable_count -= 1
+            except Exception as error:
+                print(error)
+
 
     def update_inventory(self):
         self.resellable_count = 0
